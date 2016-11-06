@@ -11,7 +11,7 @@ use Behat\Symfony2Extension\Context\KernelDictionary;
  * @package Ekyna\Behat
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
-class Context extends MinkContext implements KernelAwareContext
+class BaseContext extends MinkContext implements KernelAwareContext
 {
     use KernelDictionary;
 }
