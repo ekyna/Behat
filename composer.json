@@ -1,0 +1,30 @@
+{
+    "name": "ekyna/behat",
+    "description": "Behat and symfony testing tools",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Etienne Dauvergne",
+            "homepage": "http://ekyna.com"
+        }
+    ],
+    "keywords": [
+        "behat",
+        "library"
+    ],
+    "homepage": "https://github.com/ekyna/Behat",
+    "license": [
+        "MIT"
+    ],
+    "require": {
+        "php": ">=5.5.9",
+        "behat/symfony2-extension": "2.1.*",
+        "behat/mink-browserkit-driver": "~1.0",
+        "behat/mink-extension": "~2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ekyna\\Behat\\": ""
+        }
+    }
+}

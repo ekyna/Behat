@@ -1,6 +1,6 @@
 <?php
 
-namespace Ekyna\Behat;
+namespace Ekyna\Behat\Context;
 
 use Behat\Mink\Driver\BrowserKitDriver;
 use Behat\Mink\Exception\DriverException;
@@ -13,7 +13,7 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 /**
  * Class SecurityContext
- * @package Ekyna\Behat
+ * @package Ekyna\Behat\Context
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
 class SecurityContext extends RawMinkContext implements KernelAwareContext

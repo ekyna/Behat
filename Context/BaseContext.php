@@ -1,6 +1,6 @@
 <?php
 
-namespace Ekyna\Behat;
+namespace Ekyna\Behat\Context;
 
 use Behat\MinkExtension\Context\MinkContext;
 use Behat\Symfony2Extension\Context\KernelAwareContext;
@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Class Context
- * @package Ekyna\Behat
+ * @package Ekyna\Behat\Context
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
 class BaseContext extends MinkContext implements KernelAwareContext

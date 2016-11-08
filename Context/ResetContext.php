@@ -1,6 +1,6 @@
 <?php
 
-namespace Ekyna\Behat;
+namespace Ekyna\Behat\Context;
 
 use Behat\Behat\Context\Context;
 use Behat\Symfony2Extension\Context\KernelAwareContext;
@@ -10,7 +10,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Class DatabaseContext
- * @package Ekyna\Behat
+ * @package Ekyna\Behat\Context
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
 class ResetContext implements Context, KernelAwareContext
