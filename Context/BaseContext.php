@@ -29,7 +29,7 @@ class BaseContext extends MinkContext implements KernelAwareContext
     {
         $parametersArray = [];
 
-        if (preg_match_all('~[a-zA-Z0-9]+\:[\d]+~', $parameters, $matches)) {
+        if (preg_match_all('~[a-zA-Z0-9]+\:[a-zA-Z0-9]+~', $parameters, $matches)) {
             foreach ($matches[0] as $match) {
                 list($key, $value) = explode(':', $match);
                 $parametersArray[$key] = $value;
