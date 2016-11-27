@@ -7,6 +7,7 @@ use Behat\Symfony2Extension\Context\KernelAwareContext;
 use Behat\Symfony2Extension\Context\KernelDictionary;
 use Doctrine\DBAL\Driver\PDOConnection;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Process;
 
 /**
  * Class DatabaseContext
@@ -21,6 +22,11 @@ class ResetContext implements Context, KernelAwareContext
      * @var string
      */
     private $rootDir;
+
+    /**
+     * @var string
+     */
+    private $dataDir;
 
     /**
      * @var \Doctrine\DBAL\Connection
@@ -95,17 +101,25 @@ class ResetContext implements Context, KernelAwareContext
      */
     private function resetFilesystem()
     {
-        $directory = $this->getRootDir().'/var/test';
+        $this->extractTar(sprintf('tar -xf %s/tests/data.tar', $this->getRootDir()), $this->getDataDir());
+    }
 
+    /**
+     * Extract the [source] .tar archive to the [destination] directory.
+     *
+     * @param string $source
+     * @param string $destination
+     */
+    private function extractTar($source, $destination)
+    {
         $fs = new Filesystem();
-        $fs->remove($directory);
-        $fs->mkdir($directory);
+        $fs->remove($destination);
+        $fs->mkdir($destination);
 
-        try {
-            $phar = new \PharData($this->getRootDir().'/tests/data.tar');
-            $phar->extractTo($this->getRootDir());
-        } catch (\Exception $e) {
-            throw new \RuntimeException($e->getMessage(), $e->getCode(), $e);
+        $process = new Process($source, $destination);
+        $process->run();
+        if (!$process->isSuccessful()) {
+            throw new \RuntimeException('Failed to extract data.');
         }
     }
 
@@ -120,7 +134,22 @@ class ResetContext implements Context, KernelAwareContext
             return $this->rootDir;
         }
 
-        return $this->rootDir = realpath($this->getContainer()->getParameter('kernel.root_dir') . '/..');
+        return $this->rootDir = realpath($this->getKernel()->getRootDir() . '/..');
+    }
+
+    /**
+     * Returns the project's data directory.
+     *
+     * @return string
+     */
+    private function getDataDir()
+    {
+        if (null !== $this->dataDir) {
+            return $this->dataDir;
+        }
+
+        /** @noinspection PhpUndefinedMethodInspection */
+        return $this->dataDir = $this->getKernel()->getDataDir();
     }
 
     /**
