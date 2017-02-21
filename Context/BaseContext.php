@@ -8,13 +8,27 @@ use Behat\Symfony2Extension\Context\KernelDictionary;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
- * Class Context
+ * Class BaseContext
  * @package Ekyna\Behat\Context
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
 class BaseContext extends MinkContext implements KernelAwareContext
 {
     use KernelDictionary;
+
+    /**
+     * Opens specified route
+     *
+     * @Given /^(?:|I )am on "(?P<route>[^"]+)" route$/
+     * @When  /^(?:|I )go to "(?P<route>[^"]+)" route$/
+     *
+     * @param string $route
+     */
+    public function visitRoute($route)
+    {
+        $this->visitPath($this->generatePath($route));
+        $this->assertResponseStatus(200);
+    }
 
     /**
      * Opens specified route with parameters
@@ -37,19 +51,7 @@ class BaseContext extends MinkContext implements KernelAwareContext
         }
 
         $this->visitPath($this->generatePath($route, $parametersArray));
-    }
-
-    /**
-     * Opens specified route
-     *
-     * @Given I am on :route route
-     * @When  I go to :route route
-     *
-     * @param string $route
-     */
-    public function visitRoute($route)
-    {
-        $this->visitPath($this->generatePath($route));
+        $this->assertResponseStatus(200);
     }
 
     /**
@@ -66,5 +68,19 @@ class BaseContext extends MinkContext implements KernelAwareContext
             ->getContainer()
             ->get('router')
             ->generate($route, $parameters, UrlGeneratorInterface::ABSOLUTE_URL);
+    }
+
+    /**
+     * Fills in hidden form field with specified name
+     *
+     * @When /^(?:|I )fill in hidden "(?P<field>(?:[^"]|\\")*)" with "(?P<value>(?:[^"]|\\")*)"$/
+     */
+    public function iFillHiddenFieldWith($field, $value)
+    {
+        $field = $this->fixStepArgument($field);
+        $value = $this->fixStepArgument($value);
+
+        $this->getSession()->getPage()
+            ->find('css', 'input[name="' . $field . '"]')->setValue($value);
     }
 }

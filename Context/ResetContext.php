@@ -10,7 +10,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
 
 /**
- * Class DatabaseContext
+ * Class ResetContext
  * @package Ekyna\Behat\Context
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
