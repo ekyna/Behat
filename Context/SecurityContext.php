@@ -28,11 +28,11 @@ class SecurityContext extends RawMinkContext implements KernelAwareContext
         $minkSession = $this->getSession();
 
         $driver = $minkSession->getDriver();
-        if (!$driver instanceof BrowserKitDriver) {
+        /*if (!$driver instanceof BrowserKitDriver) {
             throw new UnsupportedDriverActionException('The driver %s is not supported.', $driver);
-        }
+        }*/
 
-        $client    = $driver->getClient();
+        //$client    = $driver->getClient();
         $container = $this->getContainer();
         $session = $container->get('session');
 
@@ -52,7 +52,7 @@ class SecurityContext extends RawMinkContext implements KernelAwareContext
         $loginManager->logInUser(
             $firewall,
             $user,
-            $client->getResponse()
+            null //$client->getResponse()
         );
 
         $token = new UsernamePasswordToken($user, null, $firewall, $user->getRoles());
@@ -64,7 +64,7 @@ class SecurityContext extends RawMinkContext implements KernelAwareContext
         }
 
         $minkSession->setCookie($session->getName(), $session->getId());
-        $client->getCookieJar()->set(new Cookie($session->getName(), $session->getId()));
+        //$client->getCookieJar()->set(new Cookie($session->getName(), $session->getId()));
     }
 
     private function isMinkSessionStarted()
