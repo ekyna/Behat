@@ -17,6 +17,9 @@ class BaseContext extends MinkContext implements KernelAwareContext
 {
     use KernelDictionary;
 
+    private $defaultWaitTimeout = 7000;
+
+
     /**
      * Opens specified route
      *
@@ -72,20 +75,13 @@ class BaseContext extends MinkContext implements KernelAwareContext
     }
 
     /**
-     * Fills in hidden form field with specified name
+     * Clicks link with specified id|title|alt|text
      *
-     * @param string $field
-     * @param string $value
-     *
-     * @When /^(?:|I )fill in hidden "(?P<field>(?:[^"]|\\")*)" with "(?P<value>(?:[^"]|\\")*)"$/
+     * @When /^(?:|I )click "(?P<link>(?:[^"]|\\")*)"$/
      */
-    public function fillHiddenFieldWith($field, $value)
+    public function clickLink($link)
     {
-        $field = $this->fixStepArgument($field);
-        $value = $this->fixStepArgument($value);
-
-        $this->getSession()->getPage()
-            ->find('css', 'input[name="' . $field . '"]')->setValue($value);
+        parent::clickLink($link);
     }
 
     /**
@@ -98,6 +94,7 @@ class BaseContext extends MinkContext implements KernelAwareContext
     public function showTab($tab)
     {
         $this->clickLink('toggle-' . $tab);
+        $this->waitXSeconds(1);
     }
 
     /**
@@ -113,16 +110,71 @@ class BaseContext extends MinkContext implements KernelAwareContext
     }
 
     /**
+     * Wait for modal to appear.
+     *
+     * @When /^(?:|I )wait for the modal to appear/
+     */
+    public function waitForModalShown()
+    {
+        $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
+            window.hasOwnProperty('jQuery') && (1 == jQuery('.modal').size()) && (1 == jQuery('.modal').css('opacity')) 
+EOT
+        );
+    }
+
+    /**
+     * Wait for form to appear.
+     *
+     * @When /^(?:|I )wait for the form "(?P<form>(?:[^"]|\\")*)" to appear/
+     */
+    public function waitForFormShown($form)
+    {
+        $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
+            window.hasOwnProperty('jQuery') && (1 == jQuery('form[name="$form"]').size()) 
+EOT
+        );
+    }
+
+    /**
+     * Wait for modal to disappear.
+     *
+     * @When /^(?:|I )wait for the modal to disappear/
+     */
+    public function waitForModalHidden()
+    {
+        $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
+            window.hasOwnProperty('jQuery') && (0 == jQuery('.modal').size()) 
+EOT
+        );
+    }
+
+    /**
      * Wait for Select2 initialization on field.
      *
      * @param string $field
      *
-     * @When /^(?:|I )I wait for Select2 initialization on "(?P<field>(?:[^"]|\\")*)"/
+     * @When /^(?:|I )wait for Select2 initialization on "(?P<field>(?:[^"]|\\")*)"/
      */
     public function waitSelect2InitializationOnField($field)
     {
-        $this->getJavascriptDriver()->wait(5000,
-            'window.hasOwnProperty("jQuery") && jQuery("[name=\"'.$field.'\"]").hasClass("select2-hidden-accessible")'
+        $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
+            window.hasOwnProperty('jQuery') && (undefined != jQuery.fn.select2) && jQuery('[name="$field"]').hasClass('select2-hidden-accessible')
+EOT
+        );
+    }
+
+    /**
+     * Wait for field to be enabled.
+     *
+     * @param string $field
+     *
+     * @When /^(?:|I )wait for "(?P<field>(?:[^"]|\\")*)" to be enabled/
+     */
+    public function waitForFieldEnabled($field)
+    {
+        $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
+            window.hasOwnProperty('jQuery') && !jQuery('[name="$field"]').is(':disabled')
+EOT
         );
     }
 
@@ -143,8 +195,38 @@ class BaseContext extends MinkContext implements KernelAwareContext
 
         $driver->evaluateScript("$('select[name=\"$field\"]').select2('open');");
         $driver->evaluateScript("$('.select2-search__field').val('". $value ."').keyup();");
-        $driver->wait(5000, '0 < jQuery(".select2-results__options li span").size()');
+        $driver->wait($this->defaultWaitTimeout, '0 < jQuery(".select2-results__options li span").size()');
+
+        // TODO Does not work. (option selectOnClose:true do the job for now)
         $driver->evaluateScript("$('.select2-results__options li:first-child').click();");
+    }
+
+    /**
+     * Fills in form tinymce field with specified id|name|label|value
+     *
+     * @When /^(?:|I )fill in tinymce "(?P<field>(?:[^"]|\\")*)" with "(?P<value>(?:[^"]|\\")*)"$/
+     * @When /^(?:|I )fill in tinymce "(?P<field>(?:[^"]|\\")*)" with:$/
+     * @When /^(?:|I )fill in tinymce "(?P<value>(?:[^"]|\\")*)" for "(?P<field>(?:[^"]|\\")*)"$/
+     */
+    public function fillTinymce($field, $value)
+    {
+        $driver = $this->getSession()->getDriver();
+        if (!$driver instanceof Selenium2Driver) {
+            parent::fillField($field, $value);
+
+            return;
+        }
+
+        $id = $this->getFieldIdFromName($field);
+
+        $driver->wait($this->defaultWaitTimeout, <<<EOT
+            window.hasOwnProperty('tinymce') && null != tinymce.get('$id')     
+EOT
+        );
+        $driver->evaluateScript(<<<EOT
+            tinymce.get('$id').setContent('<p>$value</p>')
+EOT
+        );
     }
 
     /**
@@ -162,5 +244,23 @@ class BaseContext extends MinkContext implements KernelAwareContext
         }
 
         return $driver;
+    }
+
+    /**
+     * Returns the field id from the field name.
+     *
+     * @param string $name
+     *
+     * @return string
+     */
+    private function getFieldIdFromName($name)
+    {
+        if (false === preg_match_all('~\[?[a-zA-Z0-9_]+\]?~', $name, $matches)) {
+            throw new \InvalidArgumentException("Unexpected field name '{$name}'.");
+        }
+
+        return implode('_', array_map(function($val) {
+            return trim($val, '[]');
+        }, $matches[0]));
     }
 }
