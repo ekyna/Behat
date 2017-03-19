@@ -117,7 +117,7 @@ class BaseContext extends MinkContext implements KernelAwareContext
     public function waitForModalShown()
     {
         $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
-            window.hasOwnProperty('jQuery') && (1 == jQuery('.modal').size()) && (1 == jQuery('.modal').css('opacity')) 
+            window.hasOwnProperty('jQuery') && (1 == jQuery('.modal:visible').size()) && (1 == jQuery('.modal').css('opacity')) 
 EOT
         );
     }
@@ -130,7 +130,7 @@ EOT
     public function waitForFormShown($form)
     {
         $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
-            window.hasOwnProperty('jQuery') && (1 == jQuery('form[name="$form"]').size()) 
+            window.hasOwnProperty('jQuery') && (1 == jQuery('form[name="$form"]:visible').size()) 
 EOT
         );
     }
@@ -143,7 +143,7 @@ EOT
     public function waitForModalHidden()
     {
         $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
-            window.hasOwnProperty('jQuery') && (0 == jQuery('.modal').size()) 
+            window.hasOwnProperty('jQuery') && (0 == jQuery('.modal:visible').size()) 
 EOT
         );
     }
@@ -158,7 +158,7 @@ EOT
     public function waitSelect2InitializationOnField($field)
     {
         $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
-            window.hasOwnProperty('jQuery') && (undefined != jQuery.fn.select2) && jQuery('[name="$field"]').hasClass('select2-hidden-accessible')
+            window.hasOwnProperty('jQuery') && (undefined != jQuery.fn.select2) && jQuery('[name="$field"]:visible').hasClass('select2-hidden-accessible')
 EOT
         );
     }
@@ -173,7 +173,7 @@ EOT
     public function waitForFieldEnabled($field)
     {
         $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
-            window.hasOwnProperty('jQuery') && !jQuery('[name="$field"]').is(':disabled')
+            window.hasOwnProperty('jQuery') && !jQuery('[name="$field"]:visible').is(':disabled')
 EOT
         );
     }
