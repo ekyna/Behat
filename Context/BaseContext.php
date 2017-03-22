@@ -17,6 +17,9 @@ class BaseContext extends MinkContext implements KernelAwareContext
 {
     use KernelDictionary;
 
+    /**
+     * @var int
+     */
     private $defaultWaitTimeout = 7000;
 
 
@@ -31,7 +34,6 @@ class BaseContext extends MinkContext implements KernelAwareContext
     public function visitRoute($route)
     {
         $this->visitPath($this->generatePath($route));
-        //$this->assertResponseStatus(200); TODO Does not work with Selenium2Driver
     }
 
     /**
@@ -55,7 +57,6 @@ class BaseContext extends MinkContext implements KernelAwareContext
         }
 
         $this->visitPath($this->generatePath($route, $parametersArray));
-        // $this->assertResponseStatus(200); TODO Does not work with Selenium2Driver
     }
 
     /**
@@ -78,6 +79,8 @@ class BaseContext extends MinkContext implements KernelAwareContext
      * Clicks link with specified id|title|alt|text
      *
      * @When /^(?:|I )click "(?P<link>(?:[^"]|\\")*)"$/
+     *
+     * @param string $link
      */
     public function clickLink($link)
     {
@@ -87,9 +90,9 @@ class BaseContext extends MinkContext implements KernelAwareContext
     /**
      * Show the given tab.
      *
-     * @param string $tab The tab id
-     *
      * @When /^(?:|I )show the "(?P<tab>(?:[^"]|\\")*)" tab$/
+     *
+     * @param string $tab
      */
     public function showTab($tab)
     {
@@ -100,9 +103,9 @@ class BaseContext extends MinkContext implements KernelAwareContext
     /**
      * Wait X seconds.
      *
-     * @param int $seconds
-     *
      * @When /^(?:|I )wait "(?P<seconds>(?:[^"]|\\")*)" seconds/
+     *
+     * @param int $seconds
      */
     public function waitXSeconds($seconds)
     {
@@ -126,6 +129,8 @@ EOT
      * Wait for form to appear.
      *
      * @When /^(?:|I )wait for the form "(?P<form>(?:[^"]|\\")*)" to appear/
+     *
+     * @param string $form
      */
     public function waitForFormShown($form)
     {
@@ -151,9 +156,9 @@ EOT
     /**
      * Wait for Select2 initialization on field.
      *
-     * @param string $field
-     *
      * @When /^(?:|I )wait for Select2 initialization on "(?P<field>(?:[^"]|\\")*)"/
+     *
+     * @param string $field
      */
     public function waitSelect2InitializationOnField($field)
     {
@@ -166,9 +171,9 @@ EOT
     /**
      * Wait for field to be enabled.
      *
-     * @param string $field
-     *
      * @When /^(?:|I )wait for "(?P<field>(?:[^"]|\\")*)" to be enabled/
+     *
+     * @param string $field
      */
     public function waitForFieldEnabled($field)
     {
@@ -181,10 +186,10 @@ EOT
     /**
      * Search in a (Select2) field and select.
      *
+     * @When /^(?:|I )search "(?P<value>(?:[^"]|\\")*)" in "(?P<field>(?:[^"]|\\")*)" and select the first result$/
+     *
      * @param string $value
      * @param string $field
-     *
-     * @When /^(?:|I )search "(?P<value>(?:[^"]|\\")*)" in "(?P<field>(?:[^"]|\\")*)" and select the first result$/
      */
     public function searchAndSelectFirstResult($value, $field)
     {
@@ -207,6 +212,9 @@ EOT
      * @When /^(?:|I )fill in tinymce "(?P<field>(?:[^"]|\\")*)" with "(?P<value>(?:[^"]|\\")*)"$/
      * @When /^(?:|I )fill in tinymce "(?P<field>(?:[^"]|\\")*)" with:$/
      * @When /^(?:|I )fill in tinymce "(?P<value>(?:[^"]|\\")*)" for "(?P<field>(?:[^"]|\\")*)"$/
+     *
+     * @param string $field
+     * @param string $value
      */
     public function fillTinymce($field, $value)
     {
@@ -225,6 +233,49 @@ EOT
         );
         $driver->evaluateScript(<<<EOT
             tinymce.get('$id').setContent('<p>$value</p>')
+EOT
+        );
+    }
+
+    /**
+     * Add element to collection field with specified id
+     *
+     * @When /^(?:|I )add element to collection field "(?P<field>(?:[^"]|\\")*)"$/
+     *
+     * @param string $field
+     */
+    public function addElementToCollection($field)
+    {
+        $driver = $this->getJavascriptDriver();
+
+        $driver->wait($this->defaultWaitTimeout, <<<EOT
+            window.hasOwnProperty('jQuery') && jQuery('#{$field}').attr('data-initialized') == 1     
+EOT
+        );
+        $driver->evaluateScript(<<<EOT
+            $('[data-collection="{$field}"][data-collection-role="add"]').click();");
+EOT
+        );
+    }
+
+    /**
+     * Remove element with specified index form collection field with specified id
+     *
+     * @When /^(?:|I )remove element with index "(?P<index>(?:[^"]|\\")*)" from collection field "(?P<field>(?:[^"]|\\")*)"$/
+     *
+     * @param int $index
+     * @param string $field
+     */
+    public function removeElementToCollection($index, $field)
+    {
+        $driver = $this->getJavascriptDriver();
+
+        $driver->wait($this->defaultWaitTimeout, <<<EOT
+            window.hasOwnProperty('jQuery') && jQuery('#{$field}').attr('data-initialized') == 1     
+EOT
+        );
+        $driver->evaluateScript(<<<EOT
+            $('[data-field="{$field}_{$index}"][data-collection-role="remove"]').removeAttr('data-confirm').click();
 EOT
         );
     }
