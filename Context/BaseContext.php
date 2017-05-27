@@ -253,7 +253,7 @@ EOT
 EOT
         );
         $driver->evaluateScript(<<<EOT
-            $('[data-collection="{$field}"][data-collection-role="add"]').click();");
+            $('[data-collection="{$field}"][data-collection-role="add"]').click();
 EOT
         );
     }
