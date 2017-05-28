@@ -8,14 +8,9 @@
             "homepage": "http://ekyna.com"
         }
     ],
-    "keywords": [
-        "behat",
-        "library"
-    ],
+    "keywords": ["behat", "library"],
     "homepage": "https://github.com/ekyna/Behat",
-    "license": [
-        "MIT"
-    ],
+    "license": "MIT",
     "require": {
         "php": ">=5.5.9",
         "behat/symfony2-extension": "2.1.*",
