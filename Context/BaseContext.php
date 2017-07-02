@@ -196,14 +196,11 @@ EOT
         $driver = $this->getJavascriptDriver();
 
         $this->waitSelect2InitializationOnField($field);
-//        $driver->wait(1000, 'false');
 
         $driver->evaluateScript("$('select[name=\"$field\"]').select2('open');");
-        $driver->evaluateScript("$('.select2-search__field').val('". $value ."').keyup();");
-        $driver->wait($this->defaultWaitTimeout, '0 < jQuery(".select2-results__options li span").size()');
-
-        // TODO Does not work. (option selectOnClose:true do the job for now)
-        $driver->evaluateScript("$('.select2-results__options li:first-child').click();");
+        $driver->evaluateScript("$('.select2-container--open .select2-search__field').val('$value').keyup();");
+        $driver->wait($this->defaultWaitTimeout, '0 < jQuery("li.select2-results__option--highlighted").size()');
+        $driver->evaluateScript("$('li.select2-results__option--highlighted').mouseup();");
     }
 
     /**
