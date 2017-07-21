@@ -2,6 +2,7 @@
 
 namespace Ekyna\Behat\Context;
 
+use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\MinkExtension\Context\MinkContext;
 use Behat\Symfony2Extension\Context\KernelAwareContext;
@@ -22,6 +23,37 @@ class BaseContext extends MinkContext implements KernelAwareContext
      */
     private $defaultWaitTimeout = 7000;
 
+
+    /**
+     * @AfterStep
+     *
+     * @param AfterStepScope $scope
+     */
+    public function takeScreenShotAfterFailedStep(AfterStepScope $scope)
+    {
+        if (99 === $scope->getTestResult()->getResultCode()) {
+            $driver = $this->getSession()->getDriver();
+            if (!($driver instanceof Selenium2Driver)) {
+                return;
+            }
+
+            $dir = realpath($this->getKernel()->getRootDir() . '/..') . '/tests/screenshot';
+            if (!is_dir($dir)) {
+                if (!mkdir($dir)) {
+                    return;
+                }
+            }
+
+            $feature = strtolower(preg_replace('~[^a-zA-Z0-9]~', '-', $scope->getFeature()->getTitle()));
+            $path = sprintf('%s/%s_line-%s.png', $dir, $feature, $scope->getStep()->getLine());
+
+            if (is_file($path)) {
+                @unlink($path);
+            }
+
+            file_put_contents($path, $this->getSession()->getDriver()->getScreenshot());
+        }
+    }
 
     /**
      * Opens specified route
