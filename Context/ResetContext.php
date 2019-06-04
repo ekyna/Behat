@@ -33,22 +33,30 @@ class ResetContext implements Context, KernelAwareContext
      */
     private $connection;
 
-
     /**
-     * @BeforeScenario
-     * @throws \RuntimeException
+     * TODO @ BeforeScenario
      */
-    public function reset()
+    public function beginTransaction()
     {
-        $this->resetDatabase();
-        $this->resetSearch();
-        $this->resetFilesystem();
+        $this->getConnection()->beginTransaction();
+        //$this->getConnection()->connect();
+        //$this->getConnection()->createSavepoint('test');
     }
 
     /**
-     * @throws \RuntimeException
+     * TODO @ AfterScenario
      */
-    private function resetDatabase()
+    public function rollbackTransaction()
+    {
+        $this->getConnection()->rollBack();
+        //$this->getConnection()->rollbackSavepoint('test');
+        //$this->getConnection()->releaseSavepoint('test');
+    }
+
+    /**
+     * @Given The database is reset
+     */
+    public function resetDatabase()
     {
         $conn = $this->getConnection();
 
@@ -82,24 +90,9 @@ class ResetContext implements Context, KernelAwareContext
     }
 
     /**
-     * @throws \RuntimeException
+     * @Given The filesystem is reset
      */
-    private function resetSearch()
-    {
-        // TODO Reset elasticsearch
-//        try {
-//            $phar = new \PharData('monphar.tar');
-//            $phar->extractTo($kernelDir);
-//        } catch (\Exception $e) {
-//            throw new \RuntimeException($e->getMessage(), $e->getCode(), $e);
-//            throw $e;
-//        }
-    }
-
-    /**
-     * @throws \RuntimeException
-     */
-    private function resetFilesystem()
+    public function resetFilesystem()
     {
         $this->extractTar(sprintf('tar -xf %s/tests/data.tar', $this->getRootDir()), $this->getDataDir());
     }
