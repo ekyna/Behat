@@ -31,28 +31,31 @@ class BaseContext extends MinkContext implements KernelAwareContext
      */
     public function takeScreenShotAfterFailedStep(AfterStepScope $scope)
     {
-        if (99 === $scope->getTestResult()->getResultCode()) {
-            $driver = $this->getSession()->getDriver();
-            if (!($driver instanceof Selenium2Driver)) {
+        if (99 !== $scope->getTestResult()->getResultCode()) {
+            return;
+        }
+
+        $driver = $this->getSession()->getDriver();
+        if (!($driver instanceof Selenium2Driver)) {
+            return;
+        }
+
+        $dir = realpath($this->getKernel()->getRootDir() . '/..') . '/tests/screenshot';
+        if (!is_dir($dir)) {
+            if (!mkdir($dir)) {
                 return;
             }
-
-            $dir = realpath($this->getKernel()->getRootDir() . '/..') . '/tests/screenshot';
-            if (!is_dir($dir)) {
-                if (!mkdir($dir)) {
-                    return;
-                }
-            }
-
-            $feature = strtolower(preg_replace('~[^a-zA-Z0-9]~', '-', $scope->getFeature()->getTitle()));
-            $path = sprintf('%s/%s_line-%s.png', $dir, $feature, $scope->getStep()->getLine());
-
-            if (is_file($path)) {
-                @unlink($path);
-            }
-
-            file_put_contents($path, $this->getSession()->getDriver()->getScreenshot());
         }
+
+        $feature = strtolower(preg_replace('~[^a-zA-Z0-9]~', '-', $scope->getFeature()->getTitle()));
+        $path = sprintf('%s/%s_line-%s.png', $dir, $feature, $scope->getStep()->getLine());
+
+        if (is_file($path)) {
+            @unlink($path);
+        }
+
+        file_put_contents($path, $this->getSession()->getDriver()->getScreenshot());
+
     }
 
     /**
@@ -81,9 +84,9 @@ class BaseContext extends MinkContext implements KernelAwareContext
     {
         $parametersArray = [];
 
-        if (preg_match_all('~[a-zA-Z0-9]+\:[a-zA-Z0-9]+~', $parameters, $matches)) {
+        if (preg_match_all('~[a-zA-Z0-9]+:[a-zA-Z0-9]+~', $parameters, $matches)) {
             foreach ($matches[0] as $match) {
-                list($key, $value) = explode(':', $match);
+                [$key, $value] = explode(':', $match);
                 $parametersArray[$key] = $value;
             }
         }
@@ -186,7 +189,7 @@ EOT
     }
 
     /**
-     * Wait for Select2 initialization on field.
+     * Wait for Select2 initialization on field (name).
      *
      * @When /^(?:|I )wait for Select2 initialization on "(?P<field>(?:[^"]|\\")*)"/
      *
@@ -196,6 +199,21 @@ EOT
     {
         $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
             window.hasOwnProperty('jQuery') && (undefined != jQuery.fn.select2) && jQuery('[name="$field"]:visible').hasClass('select2-hidden-accessible')
+EOT
+        );
+    }
+
+    /**
+     * Wait for phone number initialization on field (name).
+     *
+     * @When /^(?:|I )wait for phone number initialization on "(?P<field>(?:[^"]|\\")*)"/
+     *
+     * @param string $field
+     */
+    public function waitPhoneNumberInitializationOnField($field)
+    {
+        $this->getJavascriptDriver()->wait($this->defaultWaitTimeout, <<<EOT
+            window.hasOwnProperty('jQuery') && jQuery('[name="$field"] > div > div.dropdown-menu').length
 EOT
         );
     }
@@ -213,6 +231,18 @@ EOT
             window.hasOwnProperty('jQuery') && !jQuery('[name="$field"]:visible').is(':disabled')
 EOT
         );
+    }
+
+    /**
+     * Wait.
+     *
+     * @When /^(?:|I )wait "(?P<milliseconds>(?:[^"]|\\")*)" ms/
+     *
+     * @param string $milliseconds
+     */
+    public function wait($milliseconds)
+    {
+        $this->getJavascriptDriver()->wait($milliseconds, 'false');
     }
 
     /**
